@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { register } from '../services/localAuth';
+import { register } from '../services/apiService';
 import { useNavigate } from 'react-router-dom';
 import './Auth.css';
 
@@ -22,10 +22,9 @@ function Register() {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Basic validation
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match');
       return;
@@ -33,7 +32,8 @@ function Register() {
     
     try {
       setLoading(true);
-      register(formData.username, formData.email, formData.password);
+      await register(formData.username, formData.email, formData.password);
+
       navigate('/');
     } catch (err) {
       console.error('Error during registration:', err);

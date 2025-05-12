@@ -1,7 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { getCurrentUser } from '../services/localAuth';
+import { searchJobs, getCurrentUser, summarizeJobDescription } from '../services/apiService';
 import './JobListings.css';
 
 function JobListings() {
@@ -12,52 +10,76 @@ function JobListings() {
     title: '',
     location: ''
   });
+  const [page, setPage] = useState(1);
+  const [summaries, setSummaries] = useState({});
+  const [summarizing, setSummarizing] = useState({});
+  const [viewingFullDescription, setViewingFullDescription] = useState({});
+  
 
   useEffect(() => {
-    const user = getCurrentUser();
-    if (user?.preferences) {
-      const keySkillsString = user.preferences.keySkills?.join(' ') || '';
-      setSearchParams({
-        title: keySkillsString,
-        location: user.preferences.location || ''
-      });
-    }
-    
     fetchJobs();
   }, []);
 
-  const fetchJobs = async () => {
+  const fetchJobs = async (pageNum = 1) => {
     try {
       setLoading(true);
-      console.log('Fetching jobs with params:', searchParams);
+      setPage(pageNum);
       
-      const response = await axios.get('http://127.0.0.1:5000/api/jobs/search', {
-        params: {
-          title: searchParams.title,
-          location: searchParams.location
-        }
-      });
+      const jobResults = await searchJobs(
+        searchParams.title, 
+        searchParams.location,
+        pageNum
+      );
       
-      console.log('Job data:', response.data);
-      setJobs(response.data);
+      setJobs(jobResults);
       setLoading(false);
     } catch (err) {
-      console.error('Error details:', err);
-      setError('Failed to fetch job listings');
+      setError('Error loading jobs: ' + err.toString());
       setLoading(false);
     }
   };
 
-  const handleSearchChange = (e) => {
+  const handleChange = (e) => {
     setSearchParams({
       ...searchParams,
       [e.target.name]: e.target.value
     });
   };
 
+
   const handleSearch = (e) => {
     e.preventDefault();
-    fetchJobs();
+    fetchJobs(1); 
+  };
+  
+
+  const nextPage = () => fetchJobs(page + 1);
+  const prevPage = () => fetchJobs(Math.max(1, page - 1));
+
+
+  const user = getCurrentUser();
+  const usingPreferences = !!user?.preferences;
+
+  const handleSummarize = async (index, description) => {
+    if (summarizing[index] || summaries[index]) return;
+    
+    if (!description) {
+      console.error("No description available for job at index", index);
+      setSummaries(prev => ({ ...prev, [index]: "No description available to summarize." }));
+      return;
+    }
+    
+    try {
+      console.log("Summarizing job description at index", index, "length:", description.length);
+      setSummarizing(prev => ({ ...prev, [index]: true }));
+      const summary = await summarizeJobDescription(description);
+      setSummaries(prev => ({ ...prev, [index]: summary }));
+    } catch (error) {
+      console.error('Error summarizing job:', error);
+      setSummaries(prev => ({ ...prev, [index]: "Error generating summary." }));
+    } finally {
+      setSummarizing(prev => ({ ...prev, [index]: false }));
+    }
   };
 
   return (
@@ -71,18 +93,21 @@ function JobListings() {
               name="title"
               placeholder="Job Title or Keywords"
               value={searchParams.title}
-              onChange={handleSearchChange}
+              onChange={handleChange}
             />
             <input
               type="text"
               name="location"
               placeholder="Location"
               value={searchParams.location}
-              onChange={handleSearchChange}
+              onChange={handleChange}
             />
             <button type="submit" className="btn-search">Search</button>
           </div>
         </form>
+        {usingPreferences && (
+          <p className="preferences-note">Your saved preferences are included in search results</p>
+        )}
       </div>
       
       <div className="job-list">
@@ -95,6 +120,7 @@ function JobListings() {
         ) : (
           <>
             <h3>Found {jobs.length} jobs</h3>
+            
             {jobs.map((job, index) => (
               <div className="job-card" key={job.job_id || index}>
                 <div className="job-header">
@@ -111,10 +137,39 @@ function JobListings() {
                       'Salary not specified'}
                   </span>
                 </div>
-                <div className="job-description">
-                  {job.job_description ? 
-                    `${job.job_description.substring(0, 200)}...` : 
-                    'No description available'}
+                <div className="job-description-container">
+                  <p className="job-description">
+                    {viewingFullDescription[index] ? 
+                      job.job_description : 
+                      (summaries[index] ? 
+                        summaries[index] : 
+                        (job.job_description ? 
+                          `${job.job_description.substring(0, 200)}...` : 
+                          'No description available'))}
+                  </p>
+                  
+                  <div className="description-buttons">
+                    {!summaries[index] && !viewingFullDescription[index] && (
+                      <button 
+                        className="btn-summarize"
+                        onClick={() => handleSummarize(index, job.job_description)}
+                        disabled={summarizing[index]}
+                      >
+                        {summarizing[index] ? 'Summarizing...' : 'Show Key Requirements'}
+                      </button>
+                    )}
+                    
+                    <button 
+                      className="btn-summarize"
+                      onClick={() => setViewingFullDescription(prev => ({
+                        ...prev, 
+                        [index]: !prev[index]
+                      }))}
+                      style={{ marginLeft: '10px' }}
+                    >
+                      {viewingFullDescription[index] ? 'Show Less' : 'View Full Description'}
+                    </button>
+                  </div>
                 </div>
                 <a 
                   href={job.job_apply_link} 
@@ -125,6 +180,12 @@ function JobListings() {
                 </a>
               </div>
             ))}
+            
+            <div className="pagination">
+              <button onClick={prevPage} disabled={page === 1}>Previous</button>
+              <span>Page {page}</span>
+              <button onClick={nextPage} disabled={jobs.length < 20}>Next</button>
+            </div>
           </>
         )}
       </div>

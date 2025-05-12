@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { isAuthenticated, logout, getCurrentUser } from '../services/localAuth';
+import { isAuthenticated, logout, getCurrentUser } from '../services/apiService';
 import './Navbar.css';
 
 function Navbar() {

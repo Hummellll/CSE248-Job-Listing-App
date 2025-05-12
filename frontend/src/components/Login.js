@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { login } from '../services/localAuth';
+import { login } from '../services/apiService';
 import { useNavigate } from 'react-router-dom';
 import './Auth.css';
 
@@ -27,7 +27,7 @@ function Login() {
       setLoading(true);
       setError('');
       
-      login(formData.email, formData.password);
+      await login(formData.email, formData.password);
       
       navigate('/');
     } catch (err) {

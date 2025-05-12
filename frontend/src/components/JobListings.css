@@ -1,4 +1,4 @@
-/* src/components/JobListings.css */
+
 .job-listings-container {
     max-width: 1000px;
     margin: 0 auto;
@@ -112,3 +112,75 @@
     margin: 40px 0;
     color: #e74c3c;
   }
+
+.preferences-note {
+  text-align: center;
+  color: #666;
+  font-style: italic;
+  margin-top: 10px;
+  font-size: 0.9rem;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 20px;
+  gap: 15px;
+}
+
+.pagination button {
+  padding: 8px 15px;
+  background-color: #3498db;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.pagination button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+.job-description-container {
+  margin: 10px 0;
+}
+
+.btn-summarize {
+  background-color: #4a90e2;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 6px 12px;
+  margin-top: 8px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.btn-summarize:hover {
+  background-color: #357abd;
+}
+
+.btn-summarize:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+.description-buttons {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.btn-toggle-description {
+  background-color: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.btn-toggle-description:hover {
+  background-color: #5a6268;
+}

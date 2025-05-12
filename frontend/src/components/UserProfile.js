@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
-import { getCurrentUser, updateUserPreferences } from '../services/localAuth';
+import { updatePreferences as updateUserPreferences, getCurrentUser } from '../services/apiService';
 import { useNavigate } from 'react-router-dom';
 import './UserProfile.css';
 
@@ -40,10 +39,10 @@ function UserProfile() {
     });
   };
   
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      updateUserPreferences(preferences);
+      await updateUserPreferences(preferences);
       setMessage('Preferences saved successfully!');
       setTimeout(() => setMessage(''), 3000);
     } catch (error) {
@@ -62,7 +61,7 @@ function UserProfile() {
           <h3>Account Information</h3>
           <p><strong>Username:</strong> {user.username}</p>
           <p><strong>Email:</strong> {user.email}</p>
-          <p><strong>Member Since:</strong> {new Date(user.createdAt).toLocaleDateString()}</p>
+          <p><strong>Member Since:</strong> {user && user.created_at ? new Date(user.created_at).toLocaleDateString() : 'N/A'}</p>
         </div>
         
         <div className="preferences-section">
