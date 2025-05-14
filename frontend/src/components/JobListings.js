@@ -21,10 +21,14 @@ function JobListings() {
     fetchJobs();
   }, []);
   useEffect(() => {
-    const savedJobsFromStorage = localStorage.getItem('savedJobs');
+    const user = getCurrentUser();
+    if (user) {
+      const userSavedJobsKey = `savedJobs_${user.id}`;
+      const savedJobsFromStorage = localStorage.getItem(userSavedJobsKey);
     if (savedJobsFromStorage) {
       setSavedJobs(JSON.parse(savedJobsFromStorage));
     }
+  }
   }, []);
 
   const fetchJobs = async (pageNum = 1) => {
@@ -89,7 +93,10 @@ function JobListings() {
     }
   };
   const toggleSaveJob = (job) => {
-    const jobId = job.job_id || `${job.job_title}-${job.employer_name}`;
+    const user = getCurrentUser();
+  if (!user) return;
+  const userSavedJobsKey = `savedJobs_${user.id}`;
+  const jobId = job.job_id || `${job.job_title}-${job.employer_name}`;
     
     setSavedJobs(prevSavedJobs => {
       const isJobSaved = prevSavedJobs.some(savedJob => 
@@ -107,7 +114,7 @@ function JobListings() {
         newSavedJobs = [...prevSavedJobs, { ...job, job_id: jobId }];
       }
       
-      localStorage.setItem('savedJobs', JSON.stringify(newSavedJobs));
+      localStorage.setItem(userSavedJobsKey, JSON.stringify(newSavedJobs));
       return newSavedJobs;
     });
   };
