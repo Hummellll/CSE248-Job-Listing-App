@@ -14,10 +14,17 @@ function JobListings() {
   const [summaries, setSummaries] = useState({});
   const [summarizing, setSummarizing] = useState({});
   const [viewingFullDescription, setViewingFullDescription] = useState({});
-  
+  const [savedJobs, setSavedJobs] = useState([]);
+  const [viewSavedJobs, setViewSavedJobs] = useState(false);
 
   useEffect(() => {
     fetchJobs();
+  }, []);
+  useEffect(() => {
+    const savedJobsFromStorage = localStorage.getItem('savedJobs');
+    if (savedJobsFromStorage) {
+      setSavedJobs(JSON.parse(savedJobsFromStorage));
+    }
   }, []);
 
   const fetchJobs = async (pageNum = 1) => {
@@ -81,6 +88,37 @@ function JobListings() {
       setSummarizing(prev => ({ ...prev, [index]: false }));
     }
   };
+  const toggleSaveJob = (job) => {
+    const jobId = job.job_id || `${job.job_title}-${job.employer_name}`;
+    
+    setSavedJobs(prevSavedJobs => {
+      const isJobSaved = prevSavedJobs.some(savedJob => 
+        (savedJob.job_id === jobId) || 
+        (savedJob.job_title === job.job_title && savedJob.employer_name === job.employer_name)
+      );
+      
+      let newSavedJobs;
+      if (isJobSaved) {
+        newSavedJobs = prevSavedJobs.filter(savedJob => 
+          !(savedJob.job_id === jobId || 
+            (savedJob.job_title === job.job_title && savedJob.employer_name === job.employer_name))
+        );
+      } else {
+        newSavedJobs = [...prevSavedJobs, { ...job, job_id: jobId }];
+      }
+      
+      localStorage.setItem('savedJobs', JSON.stringify(newSavedJobs));
+      return newSavedJobs;
+    });
+  };
+  
+  const isJobSaved = (job) => {
+    const jobId = job.job_id || `${job.job_title}-${job.employer_name}`;
+    return savedJobs.some(savedJob => 
+      (savedJob.job_id === jobId) || 
+      (savedJob.job_title === job.job_title && savedJob.employer_name === job.employer_name)
+    );
+  };
 
   return (
     <div className="job-listings-container">
@@ -110,18 +148,33 @@ function JobListings() {
         )}
       </div>
       
+      <div className="view-toggle">
+        <button 
+          className={!viewSavedJobs ? 'active' : ''}
+          onClick={() => setViewSavedJobs(false)}
+        >
+          All Jobs
+        </button>
+        <button 
+          className={viewSavedJobs ? 'active' : ''}
+          onClick={() => setViewSavedJobs(true)}
+        >
+          Saved Jobs ({savedJobs.length})
+        </button>
+      </div>
+      
       <div className="job-list">
         {loading ? (
           <div className="loading">Loading jobs...</div>
-        ) : error ? (
-          <div className="error-message">{error}</div>
-        ) : jobs.length === 0 ? (
+        ) : (viewSavedJobs && savedJobs.length === 0) ? (
+          <div className="no-jobs">No saved jobs yet. Start saving jobs to view them here!</div>
+        ) : (!viewSavedJobs && jobs.length === 0) ? (
           <div className="no-jobs">No jobs found. Try adjusting your search.</div>
         ) : (
           <>
-            <h3>Found {jobs.length} jobs</h3>
+            <h3>{viewSavedJobs ? `${savedJobs.length} Saved Jobs` : `Found ${jobs.length} jobs`}</h3>
             
-            {jobs.map((job, index) => (
+            {(viewSavedJobs ? savedJobs : jobs).map((job, index) => (
               <div className="job-card" key={job.job_id || index}>
                 <div className="job-header">
                   <h3>{job.job_title}</h3>
@@ -171,21 +224,33 @@ function JobListings() {
                     </button>
                   </div>
                 </div>
-                <a 
-                  href={job.job_apply_link} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                >
-                  <button className="btn-apply">Apply Now</button>
-                </a>
+                
+                <div className="job-card-actions">
+                  <button 
+                    className={`btn-save ${isJobSaved(job) ? 'saved' : ''}`}
+                    onClick={() => toggleSaveJob(job)}
+                  >
+                    {isJobSaved(job) ? '★ Saved' : '☆ Save Job'}
+                  </button>
+                  
+                  <a 
+                    href={job.job_apply_link} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                  >
+                    <button className="btn-apply">Apply Now</button>
+                  </a>
+                </div>
               </div>
             ))}
             
-            <div className="pagination">
-              <button onClick={prevPage} disabled={page === 1}>Previous</button>
-              <span>Page {page}</span>
-              <button onClick={nextPage} disabled={jobs.length < 20}>Next</button>
-            </div>
+            {!viewSavedJobs && (
+              <div className="pagination">
+                <button onClick={prevPage} disabled={page === 1}>Previous</button>
+                <span>Page {page}</span>
+                <button onClick={nextPage}>Next</button>
+              </div>
+            )}
           </>
         )}
       </div>

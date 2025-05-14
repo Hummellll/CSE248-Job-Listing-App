@@ -26,8 +26,8 @@ def search_jobs(query="", location="", page=1, salary="", job_type="", industrie
             params={
                 "query": search_query if search_query else "developer",
                 "page": page,
-                "num_pages": 2,
-                "page_size": 20
+                "num_pages": 1,
+                "per_page": 10
             }
         )
         

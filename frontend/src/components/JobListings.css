@@ -184,3 +184,65 @@
 .btn-toggle-description:hover {
   background-color: #5a6268;
 }
+.view-toggle {
+  display: flex;
+  justify-content: center;
+  margin: 20px 0;
+  background-color: #f5f5f5;
+  padding: 10px;
+  border-radius: 8px;
+}
+
+.view-toggle button {
+  padding: 8px 20px;
+  margin: 0 5px;
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: all 0.3s ease;
+}
+
+.view-toggle button.active {
+  background-color: #4a90e2;
+  color: white;
+  border-color: #4a90e2;
+}
+
+.view-toggle button:hover:not(.active) {
+  background-color: #f0f0f0;
+}
+
+.job-card-actions {
+  display: flex;
+  margin-top: 15px;
+  gap: 10px;
+}
+
+.btn-save {
+  background-color: #ffffff;
+  color: #6c757d;
+  border: 2px solid #6c757d;
+  border-radius: 4px;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+.btn-save.saved {
+  background-color: #ffd700;
+  color: #000;
+  border-color: #ffd700;
+}
+
+.btn-save:hover {
+  background-color: #6c757d;
+  color: white;
+}
+
+.btn-save.saved:hover {
+  background-color: #ffeb3b;
+  border-color: #ffeb3b;
+}
